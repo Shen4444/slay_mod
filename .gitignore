@@ -11,3 +11,6 @@ obj/
 # Game files are copyrighted: never commit them
 *.dll
 decompiled/
+
+# Per-machine Godot path for build.ps1
+godot_path.txt

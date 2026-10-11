@@ -1,20 +1,27 @@
 # Builds the mod into .\dist (IOUMod.dll + IOUMod.pck + IOUMod.json).
 # Usage:  powershell -ExecutionPolicy Bypass -File build.ps1
 param(
-    # Use the *_console.exe from the Godot zip so output shows in this window
-    [string]$GodotExe = "D:\Godot_4.5.1_mono\Godot_v4.5.1-stable_mono_win64_console.exe"
+    # Path to Godot's *_console.exe. If omitted, it is read from godot_path.txt
+    # (one line, not committed) so each machine can keep its own path.
+    [string]$GodotExe
 )
 
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 
-if (-not (Test-Path $GodotExe)) {
-    Write-Error "Godot not found at '$GodotExe'. Edit the path at the top of build.ps1 or pass -GodotExe <path>."
+if (-not $GodotExe -and (Test-Path godot_path.txt)) {
+    $GodotExe = (Get-Content godot_path.txt -First 1).Trim().Trim('"')
+}
+if (-not $GodotExe -or -not (Test-Path $GodotExe)) {
+    Write-Error "Godot not found at '$GodotExe'. Put the path to Godot's _console.exe in godot_path.txt or pass -GodotExe <path>."
 }
 
-# Import resources (needed once after cloning) and compile the C# code
+# Import resources (needed once after cloning)
 & $GodotExe --headless --import
-& $GodotExe --headless --build-solutions --quit
+
+# Compile the C# code. dotnet is used directly because Godot's
+# --build-solutions can leave the headless editor running after the build.
+dotnet build IOUMod.csproj -c Debug
 if ($LASTEXITCODE -ne 0) { Write-Error "C# build failed" }
 
 if (Test-Path dist) { Remove-Item -Recurse -Force dist }

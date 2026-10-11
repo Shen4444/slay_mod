@@ -37,7 +37,8 @@
 
 ## 编译和安装
 
-1. 打开 `build.ps1`，把顶部的 `$GodotExe` 改成你电脑上 Godot 的 **`_console.exe`** 路径。
+1. 在项目文件夹里新建 `godot_path.txt`，只写一行：你电脑上 Godot 的 **`_console.exe`** 完整路径。
+   （这个文件不会提交到仓库，每台电脑各写各的。）
 2. 在项目文件夹里打开 PowerShell，运行：
    ```powershell
    powershell -ExecutionPolicy Bypass -File build.ps1
