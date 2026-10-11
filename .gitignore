@@ -1,0 +1,13 @@
+# Godot
+.godot/
+/android/
+
+# Build output
+dist/
+bin/
+obj/
+*.pck
+
+# Game files are copyrighted: never commit them
+*.dll
+decompiled/
