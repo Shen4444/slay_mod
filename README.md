@@ -61,7 +61,7 @@
    ```
 4. 第一次上传后会生成 `workshop/mod_id.txt`（创意工坊物品编号），**要提交到仓库**，以后更新才会传到同一个物品。
 
-标题、简介、可见性（默认 `private`）在 `workshop/workshop.json` 里；主图是 `workshop/image.png`，额外截图放在 `workshop/previews/`（按文件名顺序显示，每张必须小于 1MB）。
+标题、简介、可见性（`public`）在 `workshop/workshop.json` 里；主图是 `workshop/image.png`，额外截图放在 `workshop/previews/`（按文件名顺序显示，每张必须小于 1MB）。
 
 ## 文件说明
 

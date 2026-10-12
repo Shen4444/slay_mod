@@ -1,7 +1,7 @@
 {
   "title": "IOU (借据)",
   "description": "[h1]IOU[/h1]\nAdds a new shop relic, the [b]IOU[/b]. Every merchant sells it for 33 Gold until you buy it.\n\n[b]Buy now, pay later[/b]\n[list]\n[*]Buy anything from the merchant on credit, owing up to [b]100[/b] Gold. Your Gold goes negative and turns red.\n[*]While in debt, Gold from combat rewards is reduced by [b]30%[/b], or [b]50%[/b] if you owe more than 50.\n[*]Gold you earn pays off the debt automatically.\n[*]Once your debt is paid off, the IOU is used up and you cannot borrow again that run.\n[/list]\n\n[b]Requires [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3737335127]BaseLib[/url].[/b]\n\n[h1]借据[/h1]\n新增商店遗物[b]借据[/b]：每个商店都会以 33 金币出售，直到你买下为止。\n[list]\n[*]在商店购物时可以赊账，最多欠款 [b]100[/b] 金币，金币会变成红色的负数。\n[*]负债期间，战斗获得的金币减少 [b]30%[/b]；欠款超过 50 时，改为减少 [b]50%[/b]。\n[*]之后获得的金币会自动用来还债。\n[*]还清欠款后，借据失效，本局不能再赊账。\n[/list]\n\n[b]需要先订阅 [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3737335127]BaseLib[/url]。[/b]",
-  "visibility": "private",
+  "visibility": "public",
   "changeNote": "First release.",
   "tags": [],
   "dependencies": [3737335127],
