@@ -11,7 +11,7 @@ $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 
 if (-not $UploaderExe -and (Test-Path uploader_path.txt)) {
-    $UploaderExe = (Get-Content uploader_path.txt -First 1).Trim().Trim('"')
+    $UploaderExe = ([string](Get-Content uploader_path.txt | Where-Object { $_.Trim() } | Select-Object -First 1)).Trim().Trim('"')
 }
 if (-not $UploaderExe -or -not (Test-Path $UploaderExe)) {
     Write-Error "ModUploader.exe not found at '$UploaderExe'. Put its path in uploader_path.txt or pass -UploaderExe <path>."

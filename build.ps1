@@ -10,7 +10,7 @@ $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 
 if (-not $GodotExe -and (Test-Path godot_path.txt)) {
-    $GodotExe = (Get-Content godot_path.txt -First 1).Trim().Trim('"')
+    $GodotExe = ([string](Get-Content godot_path.txt | Where-Object { $_.Trim() } | Select-Object -First 1)).Trim().Trim('"')
 }
 if (-not $GodotExe -or -not (Test-Path $GodotExe)) {
     Write-Error "Godot not found at '$GodotExe'. Put the path to Godot's _console.exe in godot_path.txt or pass -GodotExe <path>."
