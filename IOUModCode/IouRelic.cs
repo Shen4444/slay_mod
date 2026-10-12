@@ -20,11 +20,11 @@ namespace IOUMod;
 public sealed class IouRelic : CustomRelicModel
 {
 	// Balance values: change these to rebalance the relic. The description updates automatically.
-	public const int Price = 20;
+	public const int Price = 33;
 	public const int MaxDebt = 100;
 	public const int HighDebtThreshold = 70;
-	public const decimal LowDebtPenalty = 0.10m;
-	public const decimal HighDebtPenalty = 0.20m;
+	public const decimal LowDebtPenalty = 0.30m;
+	public const decimal HighDebtPenalty = 0.50m;
 
 	public override RelicRarity Rarity => RelicRarity.Event;
 
