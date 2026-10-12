@@ -17,7 +17,7 @@ public static class LoseGoldPatch
 {
 	public static bool Prefix(decimal amount, Player player, GoldLossType goldLossType, ref Task __result)
 	{
-		if (IouRelic.For(player) == null)
+		if (IouRelic.ActiveFor(player) == null)
 		{
 			return true;
 		}
@@ -68,12 +68,17 @@ public static class CombatGoldRewardPatch
 	}
 }
 
-/// <summary>Keeps the debt counter on the relic icon in sync with gold.</summary>
+/// <summary>Keeps the debt counter in sync with gold and uses up the IOU once a debt is repaid.</summary>
 [HarmonyPatch(typeof(Player), nameof(Player.Gold), MethodType.Setter)]
 public static class GoldChangedPatch
 {
-	public static void Postfix(Player __instance)
+	public static void Prefix(Player __instance, out int __state)
 	{
-		IouRelic.For(__instance)?.RefreshCounter();
+		__state = __instance.Gold;
+	}
+
+	public static void Postfix(Player __instance, int __state)
+	{
+		IouRelic.For(__instance)?.OnGoldChanged(__state, __instance.Gold);
 	}
 }

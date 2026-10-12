@@ -8,12 +8,13 @@ using MegaCrit.Sts2.Core.Localization.DynamicVars;
 using MegaCrit.Sts2.Core.Models.RelicPools;
 using MegaCrit.Sts2.Core.Rooms;
 using MegaCrit.Sts2.Core.Runs;
+using MegaCrit.Sts2.Core.Saves.Runs;
 
 namespace IOUMod;
 
 /// <summary>
 /// Lets the owner buy from the merchant on credit. Debt is simply negative gold;
-/// while in debt, gold from combat rewards is reduced.
+/// while in debt, gold from combat rewards is reduced. Once a debt is fully repaid the relic is used up.
 /// </summary>
 // The event pool is never used for random drops, so the relic only comes from our shop slot.
 [Pool(typeof(EventRelicPool))]
@@ -22,7 +23,7 @@ public sealed class IouRelic : CustomRelicModel
 	// Balance values: change these to rebalance the relic. The description updates automatically.
 	public const int Price = 33;
 	public const int MaxDebt = 100;
-	public const int HighDebtThreshold = 70;
+	public const int HighDebtThreshold = 50;
 	public const decimal LowDebtPenalty = 0.30m;
 	public const decimal HighDebtPenalty = 0.50m;
 
@@ -52,19 +53,39 @@ public sealed class IouRelic : CustomRelicModel
 			"借据",
 			$"在[gold]商店[/gold]购物时可以赊账，最多欠款[gold]{MaxDebt}[/gold]金币。\n" +
 			$"负债期间，战斗获得的金币减少[gold]{Percent(LowDebtPenalty)}[/gold]；欠款超过[gold]{HighDebtThreshold}[/gold]时，改为减少[gold]{Percent(HighDebtPenalty)}[/gold]。\n" +
-			"还清欠款后，惩罚消失。\n" +
+			"还清欠款后，借据失效，不能再赊账。\n" +
 			"当前欠款：[gold]{Debt}[/gold]（金币减少[gold]{Penalty}[/gold]）",
 			"商人总是很乐意借钱给你……利息嘛，另算。"),
 		_ => new RelicLoc(
 			"IOU",
 			$"You may buy from the [gold]Merchant[/gold] on credit, owing up to [gold]{MaxDebt}[/gold] Gold.\n" +
 			$"While in debt, Gold from combat is reduced by [gold]{Percent(LowDebtPenalty)}[/gold], or [gold]{Percent(HighDebtPenalty)}[/gold] if you owe more than [gold]{HighDebtThreshold}[/gold].\n" +
-			"Paying off your debt removes the penalty.\n" +
+			"Once your debt is paid off, the IOU is used up.\n" +
 			"Owed: [gold]{Debt}[/gold] (Gold reduced by [gold]{Penalty}[/gold])",
 			"The merchant is always happy to lend... interest not included."),
 	};
 
 	public override bool IsAllowed(IRunState runState) => false;
+
+	private bool _isRepaid;
+
+	/// <summary>Set once a debt has been fully repaid; the IOU then stops working for the rest of the run.</summary>
+	[SavedProperty]
+	public bool IsRepaid
+	{
+		get => _isRepaid;
+		set
+		{
+			AssertMutable();
+			_isRepaid = value;
+			if (value)
+			{
+				Status = RelicStatus.Disabled;
+			}
+		}
+	}
+
+	public override bool IsUsedUp => IsRepaid;
 
 	public override bool ShowCounter => Debt > 0;
 
@@ -84,9 +105,12 @@ public sealed class IouRelic : CustomRelicModel
 
 	public static IouRelic? For(Player? player) => player?.GetRelic<IouRelic>();
 
+	/// <summary>The player's IOU if it still works, i.e. has not been used up by repaying a debt.</summary>
+	public static IouRelic? ActiveFor(Player? player) => For(player) is { IsRepaid: false } relic ? relic : null;
+
 	/// <summary>Whether the player can buy something costing <paramref name="cost"/> in the current shop without exceeding the debt limit.</summary>
 	public static bool CanAffordOnCredit(Player player, int cost) =>
-		For(player) != null && player.RunState.CurrentRoom is MerchantRoom && player.Gold - cost >= -MaxDebt;
+		ActiveFor(player) != null && player.RunState.CurrentRoom is MerchantRoom && player.Gold - cost >= -MaxDebt;
 
 	public override decimal ModifyGoldGained(Player player, decimal amount)
 	{
@@ -104,5 +128,13 @@ public sealed class IouRelic : CustomRelicModel
 		return Task.CompletedTask;
 	}
 
-	public void RefreshCounter() => InvokeDisplayAmountChanged();
+	public void OnGoldChanged(int oldGold, int newGold)
+	{
+		if (oldGold < 0 && newGold >= 0 && !IsRepaid)
+		{
+			IsRepaid = true;
+			Flash();
+		}
+		InvokeDisplayAmountChanged();
+	}
 }
