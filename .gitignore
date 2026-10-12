@@ -14,3 +14,7 @@ decompiled/
 
 # Per-machine Godot path for build.ps1
 godot_path.txt
+
+# Workshop upload: built files and per-machine uploader path
+workshop/content/
+uploader_path.txt

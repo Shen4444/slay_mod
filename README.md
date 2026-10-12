@@ -49,6 +49,20 @@
    ```
 3. 启动游戏，在 mod 列表里启用 **BaseLib** 和 **IOU**。
 
+## 上传到 Steam 创意工坊
+
+使用 Mega Crit 官方的 [ModUploader](https://github.com/megacrit/sts2-mod-uploader)。
+
+1. 在项目文件夹里新建 `uploader_path.txt`，只写一行：`ModUploader.exe` 的完整路径（不会提交到仓库）。
+2. 确保 Steam 已经打开并登录。
+3. 先运行 `build.ps1`，再运行：
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File publish.ps1
+   ```
+4. 第一次上传后会生成 `workshop/mod_id.txt`（创意工坊物品编号），**要提交到仓库**，以后更新才会传到同一个物品。
+
+标题、简介、可见性（默认 `private`）在 `workshop/workshop.json` 里；预览图是 `workshop/image.png`（必须小于 1MB）。
+
 ## 文件说明
 
 | 文件 | 作用 |
@@ -64,3 +78,4 @@
 | `IOUMod/` | 资源文件（图标等），会打包进 `.pck` |
 | `project.godot`、`export_presets.cfg` | Godot 项目和导出设置 |
 | `build.ps1`、`install.ps1` | 编译、安装脚本 |
+| `publish.ps1`、`workshop/` | 上传创意工坊的脚本、说明和预览图 |
