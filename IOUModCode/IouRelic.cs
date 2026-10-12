@@ -46,25 +46,22 @@ public sealed class IouRelic : CustomRelicModel
 
 	private static string Percent(decimal fraction) => $"{(int)(fraction * 100)}%";
 
-	// Numbers in the text come from the constants above, so balance changes only need editing there.
-	// {Debt} and {Penalty} are filled in by the game when the tooltip is shown.
-	public override List<(string, string)> Localization => LocManager.Instance.Language switch
+	// The text for each language is in IouRelicText; numbers in it come from the constants above,
+	// so balance changes only need editing there.
+	public override List<(string, string)> Localization
 	{
-		"zhs" => new RelicLoc(
-			"借据",
-			$"在[gold]商店[/gold]购物时可以赊账，最多欠款[gold]{MaxDebt}[/gold]金币。\n" +
-			$"负债期间，战斗获得的金币减少[gold]{Percent(LowDebtPenalty)}[/gold]；欠款超过[gold]{HighDebtThreshold}[/gold]时，改为减少[gold]{Percent(HighDebtPenalty)}[/gold]。\n" +
-			"还清欠款后，借据失效，不能再赊账。\n" +
-			"当前欠款：[gold]{Debt}[/gold]（金币减少[gold]{Penalty}[/gold]）",
-			"商人总是很乐意借钱给你……利息嘛，另算。"),
-		_ => new RelicLoc(
-			"IOU",
-			$"You may buy from the [gold]Merchant[/gold] on credit, owing up to [gold]{MaxDebt}[/gold] Gold.\n" +
-			$"While in debt, Gold from combat is reduced by [gold]{Percent(LowDebtPenalty)}[/gold], or [gold]{Percent(HighDebtPenalty)}[/gold] if you owe more than [gold]{HighDebtThreshold}[/gold].\n" +
-			"Once your debt is paid off, the IOU is used up.\n" +
-			"Owed: [gold]{Debt}[/gold] (Gold reduced by [gold]{Penalty}[/gold])",
-			"The merchant is always happy to lend... interest not included."),
-	};
+		get
+		{
+			var text = IouRelicText.For(LocManager.Instance.Language);
+			return new RelicLoc(text.Title, FillNumbers(text.Description), text.Flavor);
+		}
+	}
+
+	private static string FillNumbers(string description) => description
+		.Replace("{max}", MaxDebt.ToString())
+		.Replace("{threshold}", HighDebtThreshold.ToString())
+		.Replace("{low}", Percent(LowDebtPenalty))
+		.Replace("{high}", Percent(HighDebtPenalty));
 
 	/// <summary>
 	/// BaseLib adds <see cref="Localization"/> only once at startup, and the game rebuilds its text

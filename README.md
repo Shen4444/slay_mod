@@ -71,7 +71,9 @@
 | `IOUMod.csproj` | C# 项目配置，引用游戏的 `sts2.dll`、Harmony 和 BaseLib |
 | `Sts2PathDiscovery.props` | 自动查找游戏安装位置 |
 | `IOUModCode/MainFile.cs` | mod 入口，加载时启用所有补丁 |
-| `IOUModCode/IouRelic.cs` | 借据遗物：介绍文字、欠款计数、战斗金币减少 |
+| `IOUModCode/IouRelic.cs` | 借据遗物：欠款计数、战斗金币减少、还清后失效 |
+| `IOUModCode/IouRelicText.cs` | 借据的名字和介绍，支持游戏的全部 16 种语言 |
+| `IOUModCode/Patches/LanguageChangePatch.cs` | 切换游戏语言后重新加载借据的文字 |
 | `IOUModCode/Patches/GoldPatches.cs` | 允许商店消费让金币变负；负债时其他扣钱无效；标记战斗奖励金币 |
 | `IOUModCode/Patches/MerchantPatches.cs` | 每个商店加一个借据格子（删牌服务上方）；固定价格 33；赊账额度 |
 | `IOUModCode/Patches/TopBarGoldPatch.cs` | 金币为负时顶部金币显示为红色 |
