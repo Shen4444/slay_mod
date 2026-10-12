@@ -15,18 +15,21 @@ namespace IOUMod;
 
 /// <summary>
 /// Lets the owner buy from the merchant on credit. Debt is simply negative gold;
-/// while in debt, gold from combat rewards is reduced. Once a debt is fully repaid the relic is used up.
+/// every time a purchase borrows gold, extra interest is added to the debt.
+/// Once a debt is fully repaid the relic is used up.
 /// </summary>
 // The event pool is never used for random drops, so the relic only comes from our shop slot.
 [Pool(typeof(EventRelicPool))]
 public sealed class IouRelic : CustomRelicModel
 {
 	// Balance values: change these to rebalance the relic. The description updates automatically.
-	public const int Price = 33;
-	public const int MaxDebt = 100;
-	public const int HighDebtThreshold = 50;
-	public const decimal LowDebtPenalty = 0.30m;
-	public const decimal HighDebtPenalty = 0.50m;
+	public const int Price = 0;
+	// The most gold that can be borrowed; the interest on it comes on top.
+	public const int MaxLoan = 250;
+	public const decimal InterestRate = 0.30m;
+
+	// Gold earned pays off principal and interest together, so a full loan plus its interest is the debt limit.
+	public static int MaxDebt => MaxLoan + (int)Math.Ceiling(MaxLoan * InterestRate);
 
 	public override RelicRarity Rarity => RelicRarity.Event;
 
@@ -41,7 +44,6 @@ public sealed class IouRelic : CustomRelicModel
 	protected override IEnumerable<DynamicVar> CanonicalVars =>
 	[
 		new DisplayVar<IouRelic>("Debt", r => r.Debt.ToString()),
-		new DisplayVar<IouRelic>("Penalty", r => Percent(r.Penalty)),
 	];
 
 	private static string Percent(decimal fraction) => $"{(int)(fraction * 100)}%";
@@ -58,10 +60,8 @@ public sealed class IouRelic : CustomRelicModel
 	}
 
 	private static string FillNumbers(string description) => description
-		.Replace("{max}", MaxDebt.ToString())
-		.Replace("{threshold}", HighDebtThreshold.ToString())
-		.Replace("{low}", Percent(LowDebtPenalty))
-		.Replace("{high}", Percent(HighDebtPenalty));
+		.Replace("{max}", MaxLoan.ToString())
+		.Replace("{interest}", Percent(InterestRate));
 
 	/// <summary>
 	/// BaseLib adds <see cref="Localization"/> only once at startup, and the game rebuilds its text
@@ -122,37 +122,28 @@ public sealed class IouRelic : CustomRelicModel
 
 	public int Debt => OwnerOrNull is { Gold: < 0 } p ? -p.Gold : 0;
 
-	public decimal Penalty => Debt switch
-	{
-		0 => 0m,
-		> HighDebtThreshold => HighDebtPenalty,
-		_ => LowDebtPenalty,
-	};
-
 	public static IouRelic? For(Player? player) => player?.GetRelic<IouRelic>();
 
 	/// <summary>The player's IOU if it still works, i.e. has not been used up by repaying a debt.</summary>
 	public static IouRelic? ActiveFor(Player? player) => For(player) is { IsRepaid: false } relic ? relic : null;
 
-	/// <summary>Whether the player can buy something costing <paramref name="cost"/> in the current shop without exceeding the debt limit.</summary>
+	/// <summary>
+	/// The interest added to the debt when spending <paramref name="cost"/> with <paramref name="gold"/> in hand:
+	/// <see cref="InterestRate"/> of the part that has to be borrowed, rounded up.
+	/// </summary>
+	public static int InterestFor(int gold, int cost)
+	{
+		int borrowed = cost - Math.Max(gold, 0);
+		return borrowed > 0 ? (int)Math.Ceiling(borrowed * InterestRate) : 0;
+	}
+
+	/// <summary>Whether the player can buy something costing <paramref name="cost"/> in the current shop without exceeding the debt limit (interest included).</summary>
 	public static bool CanAffordOnCredit(Player player, int cost) =>
-		ActiveFor(player) != null && player.RunState.CurrentRoom is MerchantRoom && player.Gold - cost >= -MaxDebt;
+		ActiveFor(player) != null
+		&& player.RunState.CurrentRoom is MerchantRoom
+		&& player.Gold - cost - InterestFor(player.Gold, cost) >= -MaxDebt;
 
-	public override decimal ModifyGoldGained(Player player, decimal amount)
-	{
-		if (player != OwnerOrNull || !Patches.CombatGoldRewardPatch.IsClaiming || Penalty == 0m)
-		{
-			return amount;
-		}
-		// The game truncates to int when adding gold, which rounds the result down.
-		return amount * (1m - Penalty);
-	}
-
-	public override Task AfterModifyingGoldGained(Player player, decimal amount)
-	{
-		Flash();
-		return Task.CompletedTask;
-	}
+	public void OnInterestCharged() => Flash();
 
 	public void OnGoldChanged(int oldGold, int newGold)
 	{

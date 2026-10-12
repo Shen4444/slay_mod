@@ -2,14 +2,13 @@ using HarmonyLib;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Gold;
 using MegaCrit.Sts2.Core.Entities.Players;
-using MegaCrit.Sts2.Core.Rewards;
 using MegaCrit.Sts2.Core.Rooms;
 
 namespace IOUMod.Patches;
 
 /// <summary>
 /// The game clamps gold at 0 whenever it is lost. With the IOU:
-/// - shop purchases may take gold below 0 (that is the debt);
+/// - shop purchases may take gold below 0 (that is the debt), and the gold borrowed this way costs extra interest;
 /// - any other loss while at or below 0 does nothing, so debt is never forgiven or increased.
 /// </summary>
 [HarmonyPatch(typeof(PlayerCmd), nameof(PlayerCmd.LoseGold))]
@@ -17,7 +16,8 @@ public static class LoseGoldPatch
 {
 	public static bool Prefix(decimal amount, Player player, GoldLossType goldLossType, ref Task __result)
 	{
-		if (IouRelic.ActiveFor(player) == null)
+		var relic = IouRelic.ActiveFor(player);
+		if (relic == null)
 		{
 			return true;
 		}
@@ -33,7 +33,12 @@ public static class LoseGoldPatch
 			{
 				history.GoldSpent += loss;
 			}
-			player.Gold -= loss;
+			int interest = IouRelic.InterestFor(player.Gold, loss);
+			player.Gold -= loss + interest;
+			if (interest > 0)
+			{
+				relic.OnInterestCharged();
+			}
 			__result = Task.CompletedTask;
 			return false;
 		}
@@ -45,26 +50,6 @@ public static class LoseGoldPatch
 		}
 
 		return true;
-	}
-}
-
-/// <summary>Marks when gold is being claimed from a combat reward, which is the only gold the IOU reduces.</summary>
-[HarmonyPatch(typeof(GoldReward), "OnSelect")]
-public static class CombatGoldRewardPatch
-{
-	public static bool IsClaiming { get; private set; }
-
-	// OnSelect is async, but the game applies gold modifiers before its first await,
-	// so the flag is set for exactly that synchronous part.
-	public static void Prefix(GoldReward __instance)
-	{
-		// Gold stolen by an enemy and won back was the player's own money, so it is not reduced.
-		IsClaiming = __instance.Player.RunState.CurrentRoom is CombatRoom && !__instance._wasGoldStolenBack;
-	}
-
-	public static void Postfix()
-	{
-		IsClaiming = false;
 	}
 }
 
