@@ -1,15 +1,43 @@
-<Project Sdk="Godot.NET.Sdk/4.5.1">
+<Project Sdk="Godot.NET.Sdk/4.5.1" InitialTargets="CheckDependencyPaths">
+  <Import Project=".\Sts2PathDiscovery.props" />
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
-    <EnableDynamicLoading>true</EnableDynamicLoading>
-    <!-- Override with: dotnet build -p:Sts2DataDir=... -->
-    <Sts2DataDir Condition="'$(Sts2DataDir)' == ''">C:\Steam\steamapps\common\Slay the Spire 2\data_sts2_windows_x86_64</Sts2DataDir>
+    <ImplicitUsings>true</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- Lets the mod read the game's private fields (e.g. a shop entry's player) -->
+    <Publicize>true</Publicize>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <GodotDisabledSourceGenerators>GodotPluginsInitializer</GodotDisabledSourceGenerators>
+    <!-- The mod is built for any CPU while the local game is x64 -->
+    <NoWarn>$(NoWarn);MSB3270</NoWarn>
   </PropertyGroup>
-  <ItemGroup>
-    <!-- Referenced straight from the game install, never copied into the repo -->
+
+  <ItemGroup Condition="Exists('$(Sts2DataDir)')">
+    <Reference Include="0Harmony">
+      <HintPath>$(Sts2DataDir)/0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="sts2">
-      <HintPath>$(Sts2DataDir)\sts2.dll</HintPath>
+      <HintPath>$(Sts2DataDir)/sts2.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Krafs.Publicizer" Version="2.3.0" PrivateAssets="All" />
+    <Publicize Include="sts2" IncludeVirtualMembers="false" IncludeCompilerGeneratedMembers="false" />
+    <PackageReference Include="Alchyr.Sts2.BaseLib" Version="3.4.7" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Assets live in IOUMod/ and go into the .pck, not the .dll -->
+    <Compile Remove="IOUMod/**" />
+    <EmbeddedResource Remove="IOUMod/**" />
+    <None Include="IOUMod/**" />
+  </ItemGroup>
+
+  <Target Name="CheckDependencyPaths">
+    <Error Text=" Slay the Spire 2 data not found at path '$(Sts2DataDir)'. Set Sts2Path in Sts2PathDiscovery.props or pass -p:Sts2Path=..."
+           Condition="'$(Sts2DataDir)' == '' or !Exists('$(Sts2DataDir)')" />
+  </Target>
 </Project>

@@ -13,6 +13,6 @@ if (-not (Test-Path dist\IOUMod.dll)) {
 
 $target = Join-Path $GameDir "mods\IOUMod"
 New-Item -ItemType Directory -Force $target | Out-Null
-Copy-Item dist\* $target -Force
+Copy-Item dist\IOUMod.* $target -Force
 
 Write-Host "Installed to $target"

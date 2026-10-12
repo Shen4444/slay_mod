@@ -35,6 +35,8 @@
 
 `sts2.dll` 直接从游戏目录引用，**不会**复制进仓库（它是游戏的版权文件）。
 
+本 mod 依赖 **BaseLib**：在 Steam 创意工坊订阅 [BaseLib](https://steamcommunity.com/sharedfiles/filedetails/?id=3737335127)，测试时在游戏的 mod 列表里同时启用 BaseLib 和 IOU。
+
 ## 编译和安装
 
 1. 在项目文件夹里新建 `godot_path.txt`，只写一行：你电脑上 Godot 的 **`_console.exe`** 完整路径。
@@ -44,15 +46,20 @@
    powershell -ExecutionPolicy Bypass -File build.ps1
    powershell -ExecutionPolicy Bypass -File install.ps1
    ```
-3. 启动游戏，在 mod 列表里启用 **IOU**。
+3. 启动游戏，在 mod 列表里启用 **BaseLib** 和 **IOU**。
 
 ## 文件说明
 
 | 文件 | 作用 |
 |---|---|
 | `IOUMod.json` | mod 说明文件（名字、版本、作者） |
-| `IOUMod.csproj` | C# 项目配置，引用游戏的 `sts2.dll` |
-| `ModEntry.cs` | mod 入口，游戏加载 mod 时调用 |
-| `IOUMod/` | 资源文件（图片等），会打包进 `.pck` |
+| `IOUMod.csproj` | C# 项目配置，引用游戏的 `sts2.dll`、Harmony 和 BaseLib |
+| `Sts2PathDiscovery.props` | 自动查找游戏安装位置 |
+| `IOUModCode/MainFile.cs` | mod 入口，加载时启用所有补丁 |
+| `IOUModCode/IouRelic.cs` | 借据遗物：介绍文字、欠款计数、战斗金币减少 |
+| `IOUModCode/Patches/GoldPatches.cs` | 允许商店消费让金币变负；负债时其他扣钱无效；标记战斗奖励金币 |
+| `IOUModCode/Patches/MerchantPatches.cs` | 每个商店加一个借据格子（删牌服务上方）；固定价格 20；赊账额度 |
+| `IOUModCode/Patches/TopBarGoldPatch.cs` | 金币为负时顶部金币显示为红色 |
+| `IOUMod/` | 资源文件（图标等），会打包进 `.pck` |
 | `project.godot`、`export_presets.cfg` | Godot 项目和导出设置 |
 | `build.ps1`、`install.ps1` | 编译、安装脚本 |

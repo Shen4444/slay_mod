@@ -26,6 +26,8 @@ if ($LASTEXITCODE -ne 0) { Write-Error "C# build failed" }
 
 if (Test-Path dist) { Remove-Item -Recurse -Force dist }
 New-Item -ItemType Directory dist | Out-Null
+# Keep Godot from importing the build output as project files
+New-Item -ItemType File dist\.gdignore | Out-Null
 
 Copy-Item ".godot\mono\temp\bin\Debug\IOUMod.dll" dist\
 & $GodotExe --headless --export-pack "Windows Desktop" dist\IOUMod.pck

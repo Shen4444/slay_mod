@@ -3,9 +3,11 @@
     "name": "IOU",
     "author": "Shen4444",
     "description": "Adds the IOU relic: buy from the merchant on credit, at the cost of reduced combat gold.",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "has_pck": true,
     "has_dll": true,
-    "dependencies": [],
+    "dependencies": [
+        {"id": "BaseLib", "min_version": "3.4.7"}
+    ],
     "affects_gameplay": true
 }
