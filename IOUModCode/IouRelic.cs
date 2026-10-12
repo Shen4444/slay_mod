@@ -19,6 +19,7 @@ namespace IOUMod;
 [Pool(typeof(EventRelicPool))]
 public sealed class IouRelic : CustomRelicModel
 {
+	// Balance values: change these to rebalance the relic. The description updates automatically.
 	public const int Price = 20;
 	public const int MaxDebt = 100;
 	public const int HighDebtThreshold = 70;
@@ -38,22 +39,26 @@ public sealed class IouRelic : CustomRelicModel
 	protected override IEnumerable<DynamicVar> CanonicalVars =>
 	[
 		new DisplayVar<IouRelic>("Debt", r => r.Debt.ToString()),
-		new DisplayVar<IouRelic>("Penalty", r => $"{(int)(r.Penalty * 100)}%"),
+		new DisplayVar<IouRelic>("Penalty", r => Percent(r.Penalty)),
 	];
 
+	private static string Percent(decimal fraction) => $"{(int)(fraction * 100)}%";
+
+	// Numbers in the text come from the constants above, so balance changes only need editing there.
+	// {Debt} and {Penalty} are filled in by the game when the tooltip is shown.
 	public override List<(string, string)> Localization => LocManager.Instance.Language switch
 	{
 		"zhs" => new RelicLoc(
 			"借据",
-			"在[gold]商店[/gold]购物时可以赊账，最多欠款[gold]100[/gold]金币。\n" +
-			"负债期间，战斗获得的金币减少[gold]10%[/gold]；欠款超过[gold]70[/gold]时，改为减少[gold]20%[/gold]。\n" +
+			$"在[gold]商店[/gold]购物时可以赊账，最多欠款[gold]{MaxDebt}[/gold]金币。\n" +
+			$"负债期间，战斗获得的金币减少[gold]{Percent(LowDebtPenalty)}[/gold]；欠款超过[gold]{HighDebtThreshold}[/gold]时，改为减少[gold]{Percent(HighDebtPenalty)}[/gold]。\n" +
 			"还清欠款后，惩罚消失。\n" +
 			"当前欠款：[gold]{Debt}[/gold]（金币减少[gold]{Penalty}[/gold]）",
 			"商人总是很乐意借钱给你……利息嘛，另算。"),
 		_ => new RelicLoc(
 			"IOU",
-			"You may buy from the [gold]Merchant[/gold] on credit, owing up to [gold]100[/gold] Gold.\n" +
-			"While in debt, Gold from combat is reduced by [gold]10%[/gold], or [gold]20%[/gold] if you owe more than [gold]70[/gold].\n" +
+			$"You may buy from the [gold]Merchant[/gold] on credit, owing up to [gold]{MaxDebt}[/gold] Gold.\n" +
+			$"While in debt, Gold from combat is reduced by [gold]{Percent(LowDebtPenalty)}[/gold], or [gold]{Percent(HighDebtPenalty)}[/gold] if you owe more than [gold]{HighDebtThreshold}[/gold].\n" +
 			"Paying off your debt removes the penalty.\n" +
 			"Owed: [gold]{Debt}[/gold] (Gold reduced by [gold]{Penalty}[/gold])",
 			"The merchant is always happy to lend... interest not included."),
