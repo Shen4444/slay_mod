@@ -5,6 +5,7 @@ using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.Entities.Relics;
 using MegaCrit.Sts2.Core.Localization;
 using MegaCrit.Sts2.Core.Localization.DynamicVars;
+using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Models.RelicPools;
 using MegaCrit.Sts2.Core.Rooms;
 using MegaCrit.Sts2.Core.Runs;
@@ -64,6 +65,34 @@ public sealed class IouRelic : CustomRelicModel
 			"Owed: [gold]{Debt}[/gold] (Gold reduced by [gold]{Penalty}[/gold])",
 			"The merchant is always happy to lend... interest not included."),
 	};
+
+	/// <summary>
+	/// BaseLib adds <see cref="Localization"/> only once at startup, and the game rebuilds its text
+	/// tables whenever the language changes, so the text is written again for the new language.
+	/// </summary>
+	public static void ApplyLocalization()
+	{
+		IouRelic relic;
+		try
+		{
+			relic = ModelDb.Relic<IouRelic>();
+		}
+		catch (Exception)
+		{
+			// The model database is not ready yet; BaseLib adds the text when it is.
+			return;
+		}
+		if (relic == null)
+		{
+			return;
+		}
+
+		var translations = LocManager.Instance.GetTable("relics")._translations;
+		foreach (var (key, text) in relic.Localization)
+		{
+			translations[$"{relic.Id.Entry}.{key}"] = text;
+		}
+	}
 
 	public override bool IsAllowed(IRunState runState) => false;
 
